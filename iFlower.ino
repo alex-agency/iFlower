@@ -7,6 +7,8 @@
 #include "dht11.h"
 #include "SimpleMap.h"
 #include "timer.h"
+#include <Wire.h>
+#include "DS1307new.h"
 
 // Declare SPI bus pins
 #define CE_PIN  9
@@ -37,6 +39,11 @@ const uint16_t base_id = 00;
 // Declare state value
 #define LED_OFF  0
 
+// Declare DS1307 digital pin
+#define DS1307PIN  2
+// Declare state map keys
+#define TIME2000  "time2000"
+
 // Declare state map
 struct comparator {
   bool operator()(const char* &str1, const char* &str2) {
@@ -64,6 +71,12 @@ void setup()
   radio.begin();
   // initialize network
   mesh.begin(channel, node_id);
+
+  // initialize I2C for RTC
+  pinMode(DS1307PIN, INPUT);
+  digitalWrite(DS1307PIN, HIGH);
+  // Shift NV-RAM address 0x08  
+  RTC.setRAM(0, (uint8_t *)0x0000, sizeof(uint16_t));
 }
 
 //
@@ -156,3 +169,24 @@ bool read_DHT11() {
 }
 
 /****************************************************************************/
+
+void read_time() {
+  RTC.getRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
+  RTC.getTime();
+  states[TIME2000] = RTC.time2000; // seconds after 2000-01-01 00:00
+}
+
+/****************************************************************************/
+
+void set_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute) {
+  RTC.setRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
+  RTC.getRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
+  RTC.stopClock();
+
+  RTC.fillByYMD(year, month, day);
+  RTC.fillByHMS(hour, minute, 0);
+  
+  RTC.setTime();
+  RTC.setRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
+  RTC.startClock();
+}
