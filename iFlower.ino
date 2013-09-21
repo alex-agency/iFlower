@@ -42,13 +42,24 @@ const uint16_t base_id = 00;
 // Declare state map keys
 #define TIME2000  "time2000"
 
+// Declare soil sensors pins
+#define SOIL1PIN  A0  
+#define SOIL2PIN  A1
+#define SOIL3PIN  A2
+#define SOIL4PIN  A3
+// Declare state map keys
+#define SOIL1  "soil1"
+#define SOIL2  "soil2"
+#define SOIL3  "soil3"
+#define SOIL4  "soil4"
+
 // Declare state map
 struct comparator {
   bool operator()(const char* &str1, const char* &str2) {
     return strcmp(str1, str2) == 0;
   }
 };
-SimpleMap<const char*, int, 8, comparator> states;
+SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
 timer_t send_timer(60000);
@@ -89,6 +100,30 @@ void loop()
     Payload payload2(TEMPERATURE, states[TEMPERATURE]);
     mesh.send(payload2, base_id);
 
+    // send time value
+    read_time();
+    Payload payload3(TIME2000, states[TIME2000]);
+    mesh.send(payload3, base_id);
+
+    // send Soil sensors values
+    read_soil();
+    if(states[SOIL1] > 0) {
+      Payload payload4(SOIL1, states[SOIL1]);
+      mesh.send(payload4, base_id);
+    }
+    if(states[SOIL2] > 0) {    
+      Payload payload5(SOIL2, states[SOIL2]);
+      mesh.send(payload5, base_id);
+    }
+    if(states[SOIL3] > 0) {    
+      Payload payload6(SOIL3, states[SOIL3]);
+      mesh.send(payload6, base_id);
+    }
+    if(states[SOIL4] > 0) {    
+      Payload payload7(SOIL4, states[SOIL4]);
+      mesh.send(payload7, base_id);
+    }
+
     led_blink(LED_OFF, false);
   }
   
@@ -99,6 +134,12 @@ void loop()
   while( mesh.available() ) {
     Payload payload;
     mesh.read(payload);
+    
+    // set new time
+    if(payload.key == TIME2000) {
+      set_time(payload.value);
+    }
+
   }
 }
 
@@ -169,19 +210,68 @@ void read_time() {
   RTC.getRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
   RTC.getTime();
   states[TIME2000] = RTC.time2000; // seconds after 2000-01-01 00:00
+
+  if(DEBUG) printf("RTC: Info: time2000: %d.\n\r", states[TIME2000]);
 }
 
 /****************************************************************************/
 
-void set_time(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute) {
+void set_time(uint32_t time2000) {
   RTC.setRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
   RTC.getRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
   RTC.stopClock();
 
-  RTC.fillByYMD(year, month, day);
-  RTC.fillByHMS(hour, minute, 0);
+  RTC.fillByTime2000(time2000);
   
   RTC.setTime();
   RTC.setRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
   RTC.startClock();
 }
+
+/****************************************************************************/
+
+void read_soil() {
+  const int sensitivity = 100;
+  uint16_t sensor1, sensor2, sensor3, sensor4 = 0;
+  uint16_t value1, value2, value3, value4 = 0;
+
+  // initialize sensors
+  pinMode(SOIL1PIN, INPUT_PULLUP);
+  pinMode(SOIL2PIN, INPUT_PULLUP);
+  pinMode(SOIL3PIN, INPUT_PULLUP);
+  pinMode(SOIL4PIN, INPUT_PULLUP);
+
+  // get maximum value
+  for(int i = 0; i < sensitivity; i++) {
+    // read first sensor
+    sensor1 = analogRead(SOIL1PIN);
+    if(sensor1 != 0 && sensor1 > value1) {
+      value1 = sensor1;
+    }
+    // read second sensor
+    sensor2 = analogRead(SOIL2PIN);
+    if(sensor2 != 0 && sensor2 > value2) {
+      value2 = sensor2;
+    }
+    // read third sensor
+    sensor3 = analogRead(SOIL3PIN);
+    if(sensor3 != 0 && sensor3 > value3) {
+      value3 = sensor3;
+    }
+    // read forth sensor
+    sensor4 = analogRead(SOIL4PIN);
+    if(sensor4 != 0 && sensor4 > value4) {
+      value4 = sensor4;
+    }
+    delay(50);
+  }
+
+  states[SOIL1] = value1;
+  states[SOIL2] = value2;
+  states[SOIL3] = value3;
+  states[SOIL4] = value4;
+
+  if(DEBUG) printf("SOIL: Info: Sensor1: %d, Sensor2: %d, Sensor3: %d, Sensor4: %d.\n\r", 
+    value1, value2, value3, value4);
+}
+
