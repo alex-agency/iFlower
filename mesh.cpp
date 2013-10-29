@@ -49,9 +49,11 @@ bool Mesh::send(Payload& payload, uint16_t to_id)
     // we should know about this node
     return false;
   }
+  // set payload id from sender id
+  payload.id = node_id;
   // get destination address
   uint16_t to_address = nodes[to_id];
-  RF24NetworkHeader header(to_address, 'M');
+  RF24NetworkHeader header(to_address, 'M'); header.from_node = node_address;
   if(DEBUG) printf_P(PSTR("MESH: Info: %u, %s, %d byte: Sending payload to %u: %s..."), 
               node_id, header.toString(), sizeof(payload), to_id, payload.toString());
               
@@ -81,7 +83,7 @@ bool Mesh::send(Payload& payload, uint16_t to_id)
 
 const char* Payload::toString() const {
   static char buffer[30];
-  snprintf_P(buffer,sizeof(buffer),PSTR("{%s=%d}"), key, value);
+  snprintf_P(buffer,sizeof(buffer),PSTR("%d {%s=%d}"), id, key, value);
   return buffer;   
 }
 
@@ -114,6 +116,8 @@ void Mesh::update()
         // Unknown message type
         // skip this message
         network.read(header,0,0);
+        printf_P(PSTR("MESH: Error: %u, %s: Unknown message type!\n\r"),
+                node_id, header.toString());
         break;
     };
   }
@@ -158,7 +162,7 @@ void Mesh::read(Payload& payload)
 
 bool Mesh::send_P()
 {
-  RF24NetworkHeader header(broadcast, 'P');
+  RF24NetworkHeader header(broadcast, 'P'); header.from_node = node_address; 
   if(DEBUG) printf_P(PSTR("MESH: Info: %u, %s, %d byte: Broadcast ping..."), 
               node_id, header.toString(), sizeof(node_id));
   bool ok = network.write(header,&node_id,sizeof(node_id));
@@ -178,6 +182,11 @@ void Mesh::handle_P(RF24NetworkHeader& header)
   uint8_t received = network.read(header,&id,sizeof(id));
   if(DEBUG) printf_P(PSTR("MESH: Info: %u, %s, %d byte: Received ping from %d.\n\r"),
               node_id, header.toString(), received, id);
+  // is it our ping?
+  if(node_id == id) {
+    // skip if it ours.
+    return;
+  }
   // who send ping?
   if(header.from_node == broadcast) {
     uint16_t leaf_address;
@@ -185,14 +194,12 @@ void Mesh::handle_P(RF24NetworkHeader& header)
     if(nodes.contains(id)) {
       leaf_address = nodes[id];
     } else {
-      // find empty address for new leaf
+      // find empty slot for new leaf
       leaf_address = get_leaf_address();
     }
 
-    if(leaf_address != broadcast) {
       // send new address to broadcaster
-      send_A(leaf_address);
-    }
+    send_A(header.from_node, leaf_address);
     return;
   }
   // if node isn't broadcaster we should add its to our network
@@ -206,9 +213,9 @@ void Mesh::handle_P(RF24NetworkHeader& header)
 
 /****************************************************************************/
 
-bool Mesh::send_A(const uint16_t leaf_address)
+bool Mesh::send_A(const uint16_t to_address, const uint16_t leaf_address)
 {
-  RF24NetworkHeader header(broadcast, 'A');
+  RF24NetworkHeader header(to_address, 'A'); header.from_node = node_address;
   if(DEBUG) printf_P(PSTR("MESH: Info: %u, %s, %d byte: Sending new leaf address '0%o'.\n\r"), 
               node_id, header.toString(), sizeof(leaf_address), leaf_address);
   return network.write(header,&leaf_address,sizeof(leaf_address));
@@ -230,20 +237,24 @@ void Mesh::handle_A(RF24NetworkHeader& header)
 
 uint16_t Mesh::get_leaf_address()
 {
-  node_address
-
-  // find next after relay empty address
   bool exists = false;
-  for(uint16_t address = relay + 1; address < homeless; address++) {
+  // shifting from 055 to 0550
+  uint16_t shift = node_address << 3; 
+  // check for available spaces
+  if(shift >= broadcast)
+    return broadcast;
+  // for node 052 will return 0521-0525
+  for(uint16_t address = shift+1; address <= shift+5; address++) {
     for(int index = 0; index < nodes.size(); index++) {
       if(nodes.valueAt(index) == address) {
          exists = true;
       }
     }
-    if(exists == false) {
+    // we found empty slot
+    if(exists == false)
       return address;
     }
-  }
+  // nothing for this relay
 
 
 
@@ -282,15 +293,12 @@ void Mesh::reset_node()
   }
   // change connection state
   ready_to_send = false;
-  // exit if node already broadcast
-  if(node_address == broadcast)
-    return;
-  // set as broadcast
+  // set address as broadcast
   node_address = broadcast;
   if(DEBUG) printf_P(PSTR("MESH: Info: %u, 0%o: Node is flashed.\n\r"), 
               node_id, node_address);
   // reinitialize node
-  network.begin(channel, broadcast);
+  network.begin(channel, node_address);
 }
 
 /****************************************************************************/
