@@ -9,6 +9,7 @@
 #include "timer.h"
 #include <Wire.h>
 #include "DS1307new.h"
+#include "led.h"
 
 // Declare SPI bus pins
 #define CE_PIN  9
@@ -30,14 +31,8 @@ const uint16_t base_id = 00;
 #define HUMIDITY  "humidity"
 #define TEMPERATURE  "temperature"
 
-// Declare LED digital pins
-#define LEDREDPIN  6
-#define LEDGREENPIN  5
-// Declare state map keys
-#define LED_RED  "red_led"
-#define LED_GREEN  "green_led"
-// Declare state value
-#define LED_OFF  0
+// Set up LED digital pins
+Led led(5, 6); // (green, red) 
 
 // Declare state map keys
 #define TIME2000  "time2000"
@@ -62,7 +57,7 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t send_timer(60000);
+timer_t timer(60000);
 
 // Debug info.
 const bool DEBUG = true;
@@ -90,23 +85,33 @@ void setup()
 //
 void loop()
 {  
-  if( mesh.ready() && send_timer ) {
-    led_blink(LED_GREEN, false);
-        
-    // send DHT11 sensor values
+  if( timer ) {
+    // read sensors
     read_DHT11();
+    read_soil();
+
+    read_time();
+
+    // check values
+    check();
+  }
+
+  // update led
+  led.update();
+
+  // send values to base
+  if( mesh.ready() && timer ) {      
+    // send DHT11 sensor values
     Payload payload1(HUMIDITY, states[HUMIDITY]);
     mesh.send(payload1, base_id);
     Payload payload2(TEMPERATURE, states[TEMPERATURE]);
     mesh.send(payload2, base_id);
 
     // send time value
-    read_time();
     Payload payload3(TIME2000, states[TIME2000]);
     mesh.send(payload3, base_id);
 
     // send Soil sensors values
-    read_soil();
     if(states[SOIL1] > 0) {
       Payload payload4(SOIL1, states[SOIL1]);
       mesh.send(payload4, base_id);
@@ -123,14 +128,12 @@ void loop()
       Payload payload7(SOIL4, states[SOIL4]);
       mesh.send(payload7, base_id);
     }
-
-    led_blink(LED_OFF, false);
   }
   
   // update network
   mesh.update();
   
-  // is new payload message available?
+  // read message if available
   while( mesh.available() ) {
     Payload payload;
     mesh.read(payload);
@@ -139,43 +142,6 @@ void loop()
     if(payload.key == TIME2000) {
       set_time(payload.value);
     }
-
-  }
-}
-
-/****************************************************************************/
-
-void led_blink(const char* led, bool blink) {
-  // blinking
-  if(blink && states[led]) {
-    led = LED_OFF;
-  }
-  // clear all states
-  states[LED_RED] = false;
-  states[LED_GREEN] = false;
-
-  if(strcmp(led, LED_RED) == 0) {
-    // initialize led pins
-    pinMode(LEDREDPIN, OUTPUT);
-    // enable red led
-    digitalWrite(LEDREDPIN, HIGH);
-    digitalWrite(LEDGREENPIN, LOW);
-    // save state
-    states[LED_RED] = true;
-  } 
-  else if(strcmp(led, LED_GREEN) == 0) {
-    // initialize led pins
-    pinMode(LEDGREENPIN, OUTPUT);
-    // enable green led
-    digitalWrite(LEDGREENPIN, HIGH);
-    digitalWrite(LEDREDPIN, LOW);
-    // save state
-    states[LED_GREEN] = true;
-  } 
-  else {
-    // disable leds
-    digitalWrite(LEDREDPIN, LOW);
-    digitalWrite(LEDGREENPIN, LOW);
   }
 }
 
@@ -275,3 +241,23 @@ void read_soil() {
     value1, value2, value3, value4);
 }
 
+/****************************************************************************/
+
+void check() {
+  if( states[SOIL1] > 0 && states[SOIL1] < 250 )
+
+
+
+
+
+}
+
+/****************************************************************************/
+
+int soil_level() {
+
+
+  
+}
+
+/****************************************************************************/
