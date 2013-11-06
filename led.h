@@ -40,7 +40,7 @@ public:
 
 		if( blink_count == 0 ) {
 			// reset time
-			time == 0;
+			time = 0;
 		}
 
 		// blinking if need
@@ -56,7 +56,7 @@ public:
 			unsigned long delay = millis() - time;
 
 			if( previous_state == LED_OFF && delay < blink_delay_start ) {
-				// just wait
+				// wait 'off' delay
 				return;
 			} 
 
@@ -74,9 +74,13 @@ public:
 				time = millis() - (blink_delay_start - blink_delay_off);
 				blink_count --;
 				return;
+			} 
+			else {
+				// wait 'on' delay
+				return;
 			}
 		}
-
+		
 		// change led
 		write(state);
 	};
