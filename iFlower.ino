@@ -10,6 +10,10 @@
 #include <Wire.h>
 #include "DS1307new.h"
 #include "led.h"
+#include "soil.h"
+
+// Debug info.
+const bool DEBUG = true;
 
 // Declare SPI bus pins
 #define CE_PIN  9
@@ -37,11 +41,11 @@ Led led(5, 6); // (green, red)
 // Declare state map keys
 #define TIME2000  "time2000"
 
-// Declare soil sensors pins
-#define SOIL1PIN  A0  
-#define SOIL2PIN  A1
-#define SOIL3PIN  A2
-#define SOIL4PIN  A3
+// Set up SOIL sensors analog pins
+Soil soil_1(A0);
+Soil soil_2(A1);
+Soil soil_3(A2);
+Soil soil_4(A3);
 // Declare state map keys
 #define SOIL1  "soil1"
 #define SOIL2  "soil2"
@@ -58,9 +62,6 @@ SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
 timer_t timer(60000);
-
-// Debug info.
-const bool DEBUG = true;
 
 //
 // Setup
@@ -89,7 +90,6 @@ void loop()
     // read sensors
     read_DHT11();
     read_soil();
-
     read_time();
 
     // check values
@@ -112,19 +112,19 @@ void loop()
     mesh.send(payload3, base_id);
 
     // send Soil sensors values
-    if(states[SOIL1] > 0) {
+    if(states[SOIL1] != -1) {
       Payload payload4(SOIL1, states[SOIL1]);
       mesh.send(payload4, base_id);
     }
-    if(states[SOIL2] > 0) {    
+    if(states[SOIL2] != -1) {    
       Payload payload5(SOIL2, states[SOIL2]);
       mesh.send(payload5, base_id);
     }
-    if(states[SOIL3] > 0) {    
+    if(states[SOIL3] != -1) {    
       Payload payload6(SOIL3, states[SOIL3]);
       mesh.send(payload6, base_id);
     }
-    if(states[SOIL4] > 0) {    
+    if(states[SOIL4] != -1) {    
       Payload payload7(SOIL4, states[SOIL4]);
       mesh.send(payload7, base_id);
     }
@@ -197,67 +197,32 @@ void set_time(uint32_t time2000) {
 /****************************************************************************/
 
 void read_soil() {
-  const int sensitivity = 100;
-  uint16_t sensor1, sensor2, sensor3, sensor4 = 0;
-  uint16_t value1, value2, value3, value4 = 0;
-
-  // initialize sensors
-  pinMode(SOIL1PIN, INPUT_PULLUP);
-  pinMode(SOIL2PIN, INPUT_PULLUP);
-  pinMode(SOIL3PIN, INPUT_PULLUP);
-  pinMode(SOIL4PIN, INPUT_PULLUP);
-
-  // get maximum value
-  for(int i = 0; i < sensitivity; i++) {
-    // read first sensor
-    sensor1 = analogRead(SOIL1PIN);
-    if(sensor1 != 0 && sensor1 > value1) {
-      value1 = sensor1;
-    }
-    // read second sensor
-    sensor2 = analogRead(SOIL2PIN);
-    if(sensor2 != 0 && sensor2 > value2) {
-      value2 = sensor2;
-    }
-    // read third sensor
-    sensor3 = analogRead(SOIL3PIN);
-    if(sensor3 != 0 && sensor3 > value3) {
-      value3 = sensor3;
-    }
-    // read forth sensor
-    sensor4 = analogRead(SOIL4PIN);
-    if(sensor4 != 0 && sensor4 > value4) {
-      value4 = sensor4;
-    }
-    delay(50);
-  }
-
-  states[SOIL1] = value1;
-  states[SOIL2] = value2;
-  states[SOIL3] = value3;
-  states[SOIL4] = value4;
+  states[SOIL1] = soil_1.read();
+  states[SOIL2] = soil_2.read();
+  states[SOIL3] = soil_3.read();
+  states[SOIL4] = soil_4.read();
 
   if(DEBUG) printf("SOIL: Info: Sensor1: %d, Sensor2: %d, Sensor3: %d, Sensor4: %d.\n\r", 
-    value1, value2, value3, value4);
+    states[SOIL1], states[SOIL2], states[SOIL3], states[SOIL4]);
 }
 
 /****************************************************************************/
 
 void check() {
-  if( states[SOIL1] > 0 && states[SOIL1] < 250 )
+  led.set_blink(LED_GREEN, 1);
 
-
-
-
-
-}
-
-/****************************************************************************/
-
-int soil_level() {
-
-
-  
+  if( states[SOIL1] != -1 && states[SOIL1] <=2 ) {
+    led.set_blink(LED_RED, 1);
+  }
+  if( states[SOIL2] != -1 && states[SOIL2] <=2 ) {
+    led.set_blink(LED_RED, 2);
+  }
+  if( states[SOIL3] != -1 && states[SOIL3] <=2 ) {
+    led.set_blink(LED_RED, 3);
+  }
+  if( states[SOIL4] != -1 && states[SOIL4] <=2 ) {
+    led.set_blink(LED_RED, 4);
+  }
 }
 
 /****************************************************************************/

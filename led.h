@@ -2,15 +2,15 @@
 #ifndef LED_H
 #define LED_H
 
-#define OFF			0
-#define RED			1
-#define GREEN		2
+#define LED_OFF			0
+#define LED_RED			1
+#define LED_GREEN		2
 
 const int blink_delay_start = 3000; //ms
 const int blink_delay_on = 800; 	//ms
 const int blink_delay_off = 400; 	//ms
 
-class led
+class Led
 {
 public:
 	Led( int _pin_green, int _pin_red ) {
@@ -37,28 +37,46 @@ public:
 		// return if nothing update
 		if( previous_state == state && blink_count == 0 ) 
 			return;
+
+		if( blink_count == 0 ) {
+			// reset time
+			time == 0;
+		}
+
 		// blinking if need
 		if( blink_count > 0 ) {
 
 			if( time == 0 ) {
 				time = millis();
 				// do off
-				write(OFF);
+				write(LED_OFF);
 				return;
 			} 
 
 			unsigned long delay = millis() - time;
 
-			if( delay < blink_delay_start ) {
-				// do off
-				write(OFF);
+			if( previous_state == LED_OFF && delay < blink_delay_start ) {
+				// just wait
+				return;
+			} 
+
+			if( previous_state == LED_OFF && delay >= blink_delay_start ) {
+				// enable led
+				write(state);
+				time = millis();
 				return;
 			}
 
-			if ( delay < )
-
-			time = millis();
+			if ( previous_state != LED_OFF && delay >= blink_delay_on ) {
+				// do off
+				write(LED_OFF);
+				// shift time for short off
+				time = millis() - (blink_delay_start - blink_delay_off);
+				blink_count --;
+				return;
+			}
 		}
+
 		// change led
 		write(state);
 	};
@@ -66,27 +84,29 @@ public:
 private:
 	int pin_green;
 	int pin_red;
-	int state = OFF;
-	int previous_state = OFF;
-	int blink_count = 0;
-	unsigned long time = 0;
+	int state;
+	int previous_state;
+	int blink_count;
+	unsigned long time;
 
 	void write( int state ) {
-		if( state == RED ) {
+		if( state == LED_RED ) {
 			// enable red led
 	    	digitalWrite(pin_red, HIGH);
 	    	digitalWrite(pin_green, LOW);
 		} else
-			if( state == GREEN ) {
+			if( state == LED_GREEN ) {
 				// enable green led
 		    	digitalWrite(pin_green, HIGH);
 		    	digitalWrite(pin_red, LOW);
 			} else
-				if( state == OFF ) {
+				if( state == LED_OFF ) {
 					// disable led
 					digitalWrite(pin_green, LOW);
 		    		digitalWrite(pin_red, LOW);
 				}
+
+		previous_state = state;
 	}; 
 };
 
