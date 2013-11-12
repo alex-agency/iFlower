@@ -10,7 +10,7 @@
 #define WET 			5
 #define EXTRA_WET		6
 
-const int sensitivity = 50;
+const int sensitivity = 1;
 
 class Soil
 {
@@ -22,33 +22,29 @@ public:
 	};
 
 	int read() {
-		int value, sensor = 0;
-		// get maximum value
-  		for(int i = 0; i < sensitivity; i++) {
-  			sensor = analogRead(sensor_pin);
-    		if(sensor != 0 && sensor > value) {
-      			value = sensor;
-    		}
-    		delay(50);
-  		}
+  	        delay(100);
+                int value = analogRead(sensor_pin);
+    		
+                printf("SOIL: Info: pin: %d, ", sensor_pin);
+                printf(" value: %d.\n\r", value);
 
-  		if( value < 10 )
+  		if( value > 1000 )
   			return OFF;
   		else
-  			if( value < 100 )
-  				return DRY;
+  			if( value < 200 )
+  				return EXTRA_WET;
   			else
-  				if( value < 200 )
-  					return PARTLY_DRY;
+  				if( value < 350 )
+  					return WET;
   				else
-  					if( value < 300 )
+  					if( value < 500 )
   						return PARTLY_WET;
   					else
-  						if( value < 400 )
-  							return WET;
+  						if( value < 650 )
+  							return PARTLY_DRY;
   						else
-  							if( value < 512 )
-  								return EXTRA_WET;
+  							if( value < 800 )
+  								return DRY;
   		return OFF;
 	};
 
