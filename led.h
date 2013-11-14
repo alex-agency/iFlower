@@ -10,13 +10,15 @@ const int blink_delay_start = 3000; //ms
 const int blink_delay_on = 800; 	//ms
 const int blink_delay_off = 400; 	//ms
 
+// Debug info
+const bool DEBUG = true;
+
 class Led
 {
 public:
 	Led( int _pin_green, int _pin_red ) {
 		pin_green = _pin_green;
 		pin_red = _pin_red;
-
 		// initialize led pins
     	pinMode(_pin_green, OUTPUT);
     	pinMode(_pin_red, OUTPUT);
@@ -27,6 +29,8 @@ public:
 		state = _state;
 		blink_count = _blink_count;
 		time = 0;
+		if(DEBUG) printf_P(PSTR("LED: Info: state: %d, blink count: %d.\n\r"),
+        	_state, _blink_count);
 	};
 
 	void set( int _state ) {
@@ -50,6 +54,7 @@ public:
 				time = millis();
 				// do off
 				write(LED_OFF);
+				if(DEBUG) printf_P("LED: Info: Blinking Start delay...\n\r");
 				return;
 			} 
 
@@ -64,6 +69,7 @@ public:
 				// enable led
 				write(state);
 				time = millis();
+				if(DEBUG) printf_P("LED: Info: Blinking ON delay...\n\r");
 				return;
 			}
 
@@ -73,6 +79,8 @@ public:
 				// shift time for short off
 				time = millis() - (blink_delay_start - blink_delay_off);
 				blink_count --;
+				if(DEBUG) printf_P(PSTR("LED: Info: Blinking OFF delay, %d blinks left.\n\r"),
+					blink_count);
 				return;
 			} 
 			else {
@@ -94,23 +102,33 @@ private:
 	unsigned long time;
 
 	void write( int state ) {
+		if(DEBUG) printf_P("LED: Info: ");
+
 		if( state == LED_RED ) {
 			// enable red led
 	    	digitalWrite(pin_red, HIGH);
 	    	digitalWrite(pin_green, LOW);
+
+	    	if(DEBUG) printf_P("enabled RED led, ");
 		} else
 			if( state == LED_GREEN ) {
 				// enable green led
 		    	digitalWrite(pin_green, HIGH);
 		    	digitalWrite(pin_red, LOW);
+
+		    	if(DEBUG) printf_P("enabled GREEN led, ");
 			} else
 				if( state == LED_OFF ) {
 					// disable led
 					digitalWrite(pin_green, LOW);
 		    		digitalWrite(pin_red, LOW);
-				}
 
+		    		if(DEBUG) printf_P("disabled led, ");
+				}
+		// save previous state
 		previous_state = state;
+		if(DEBUG) printf_P(PSTR("new state: %d, previous state: %d.\n\r"),
+			state, previous_state);
 	}; 
 };
 

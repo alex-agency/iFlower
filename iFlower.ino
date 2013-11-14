@@ -12,9 +12,6 @@
 #include "led.h"
 #include "soil.h"
 
-// Debug info.
-const bool DEBUG = true;
-
 // Declare SPI bus pins
 #define CE_PIN  9
 #define CS_PIN  10
@@ -177,7 +174,8 @@ void read_time() {
   RTC.getTime();
   states[TIME2000] = RTC.time2000; // seconds after 2000-01-01 00:00
 
-  if(DEBUG) printf("RTC: Info: time2000: %d.\n\r", states[TIME2000]);
+  if(DEBUG) printf("RTC: Info: current time2000: %d -> %d-%d-%d %d:%d:%d.\n\r", 
+    states[TIME2000], RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
 }
 
 /****************************************************************************/
@@ -188,6 +186,7 @@ void set_time(uint32_t time2000) {
   RTC.stopClock();
 
   RTC.fillByTime2000(time2000);
+  if(DEBUG) printf("RTC: Info: set new time2000: %d.\n\r", time2000);
   
   RTC.setTime();
   RTC.setRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));

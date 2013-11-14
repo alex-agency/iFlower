@@ -2,15 +2,13 @@
 #ifndef SOIL_H
 #define SOIL_H
 
-#define OFF				-1
-#define EXTRA_DRY		1
-#define DRY 			2
+#define OFF          -1
+#define EXTRA_DRY     1
+#define DRY           2
 #define PARTLY_DRY		3
 #define PARTLY_WET		4
-#define WET 			5
-#define EXTRA_WET		6
-
-const int sensitivity = 1;
+#define WET           5
+#define EXTRA_WET     6
 
 class Soil
 {
@@ -22,30 +20,39 @@ public:
 	};
 
 	int read() {
-  	        delay(100);
-                int value = analogRead(sensor_pin);
-    		
-                printf("SOIL: Info: pin: %d, ", sensor_pin);
-                printf(" value: %d.\n\r", value);
+    delay(50); // short delay before read analog
+    int value = analogRead(sensor_pin);
 
-  		if( value > 1000 )
-  			return OFF;
-  		else
-  			if( value < 200 )
-  				return EXTRA_WET;
+    if(DEBUG) printf_P(PSTR("SOIL: Info: pin: %d, value: %d, "),
+      sensor_pin, value);
+
+		if( value < 200 ) {
+      if(DEBUG) printf_P("state: EXTRA WET.\n\r");
+				return EXTRA_WET;
+    }
+  		else 
+  			if( value < 350 ) {
+        if(DEBUG) printf_P("state: WET.\n\r");
+  				return WET;
+      }
   			else
-  				if( value < 350 )
-  					return WET;
+  				if( value < 500 ) {
+  					if(DEBUG) printf_P("state: PARTLY WET.\n\r");
+          return PARTLY_WET;
+        }
   				else
-  					if( value < 500 )
-  						return PARTLY_WET;
+  					if( value < 650 ) {
+  						if(DEBUG) printf_P("state: PARTLY DRY.\n\r");
+            return PARTLY_DRY;
+          }
   					else
-  						if( value < 650 )
-  							return PARTLY_DRY;
-  						else
-  							if( value < 800 )
-  								return DRY;
-  		return OFF;
+  						if( value < 800 ) {
+  							if(DEBUG) printf_P("state: DRY.\n\r");
+              return DRY;
+            }
+      
+    if(DEBUG) printf_P("state: OFF.\n\r");
+    return OFF;
 	};
 
 private:
