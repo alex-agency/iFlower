@@ -12,6 +12,9 @@
 #include "led.h"
 #include "soil.h"
 
+// Debug info
+#define DEBUG   true
+
 // Declare SPI bus pins
 #define CE_PIN  9
 #define CS_PIN  10
@@ -22,7 +25,7 @@ Mesh mesh(radio);
 // Declare radio channel 0-127
 const uint8_t channel = 76;
 // Declare unique node id
-const uint16_t node_id = 1002;
+const uint16_t node_id = 00;
 // Declare base id, base always has 00 id
 const uint16_t base_id = 00;
 
@@ -58,7 +61,7 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(60000);
+timer_t timer(10000);
 
 //
 // Setup

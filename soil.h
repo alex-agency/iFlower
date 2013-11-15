@@ -10,6 +10,9 @@
 #define WET           5
 #define EXTRA_WET     6
 
+// Debug info
+#define DEBUG         true
+
 class Soil
 {
 public:
@@ -27,31 +30,31 @@ public:
       sensor_pin, value);
 
 		if( value < 200 ) {
-      if(DEBUG) printf_P("state: EXTRA WET.\n\r");
+      if(DEBUG) printf_P(PSTR("state: EXTRA WET.\n\r"));
 				return EXTRA_WET;
     }
   		else 
   			if( value < 350 ) {
-        if(DEBUG) printf_P("state: WET.\n\r");
+        if(DEBUG) printf_P(PSTR("state: WET.\n\r"));
   				return WET;
       }
   			else
   				if( value < 500 ) {
-  					if(DEBUG) printf_P("state: PARTLY WET.\n\r");
+  					if(DEBUG) printf_P(PSTR("state: PARTLY WET.\n\r"));
           return PARTLY_WET;
         }
   				else
   					if( value < 650 ) {
-  						if(DEBUG) printf_P("state: PARTLY DRY.\n\r");
+  						if(DEBUG) printf_P(PSTR("state: PARTLY DRY.\n\r"));
             return PARTLY_DRY;
           }
   					else
   						if( value < 800 ) {
-  							if(DEBUG) printf_P("state: DRY.\n\r");
+  							if(DEBUG) printf_P(PSTR("state: DRY.\n\r"));
               return DRY;
             }
       
-    if(DEBUG) printf_P("state: OFF.\n\r");
+    if(DEBUG) printf_P(PSTR("state: OFF.\n\r"));
     return OFF;
 	};
 

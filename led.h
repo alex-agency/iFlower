@@ -2,16 +2,16 @@
 #ifndef LED_H
 #define LED_H
 
-#define LED_OFF			0
-#define LED_RED			1
-#define LED_GREEN		2
+#define LED_OFF		0
+#define LED_RED		1
+#define LED_GREEN	2
 
 const int blink_delay_start = 3000; //ms
 const int blink_delay_on = 800; 	//ms
 const int blink_delay_off = 400; 	//ms
 
 // Debug info
-const bool DEBUG = true;
+#define DEBUG 		true
 
 class Led
 {
@@ -54,7 +54,7 @@ public:
 				time = millis();
 				// do off
 				write(LED_OFF);
-				if(DEBUG) printf_P("LED: Info: Blinking Start delay...\n\r");
+				if(DEBUG) printf_P(PSTR("LED: Info: Blinking Start delay...\n\r"));
 				return;
 			} 
 
@@ -69,7 +69,7 @@ public:
 				// enable led
 				write(state);
 				time = millis();
-				if(DEBUG) printf_P("LED: Info: Blinking ON delay...\n\r");
+				if(DEBUG) printf_P(PSTR("LED: Info: Blinking ON delay...\n\r"));
 				return;
 			}
 
@@ -102,28 +102,28 @@ private:
 	unsigned long time;
 
 	void write( int state ) {
-		if(DEBUG) printf_P("LED: Info: ");
+		if(DEBUG) printf_P(PSTR("LED: Info: "));
 
 		if( state == LED_RED ) {
 			// enable red led
 	    	digitalWrite(pin_red, HIGH);
 	    	digitalWrite(pin_green, LOW);
 
-	    	if(DEBUG) printf_P("enabled RED led, ");
+	    	if(DEBUG) printf_P(PSTR("enabled RED led, "));
 		} else
 			if( state == LED_GREEN ) {
 				// enable green led
 		    	digitalWrite(pin_green, HIGH);
 		    	digitalWrite(pin_red, LOW);
 
-		    	if(DEBUG) printf_P("enabled GREEN led, ");
+		    	if(DEBUG) printf_P(PSTR("enabled GREEN led, "));
 			} else
 				if( state == LED_OFF ) {
 					// disable led
 					digitalWrite(pin_green, LOW);
 		    		digitalWrite(pin_red, LOW);
 
-		    		if(DEBUG) printf_P("disabled led, ");
+		    		if(DEBUG) printf_P(PSTR("disabled led, "));
 				}
 		// save previous state
 		previous_state = state;
