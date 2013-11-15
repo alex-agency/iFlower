@@ -11,6 +11,7 @@
 #include "DS1307new.h"
 #include "led.h"
 #include "soil.h"
+#include "melody.h"
 
 // Debug info
 #define DEBUG   true
@@ -51,6 +52,9 @@ Soil soil_4(A3);
 #define SOIL2  "soil2"
 #define SOIL3  "soil3"
 #define SOIL4  "soil4"
+
+// Set up Speaker digital pin
+Melody melody(4);
 
 // Declare state map
 struct comparator {
@@ -225,6 +229,8 @@ void check() {
   if( states[SOIL4] != -1 && states[SOIL4] <=2 ) {
     led.set_blink(LED_RED, 4);
   }
+
+  melody.play(); // random melody
 }
 
 /****************************************************************************/
