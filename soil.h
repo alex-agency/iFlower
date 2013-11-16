@@ -11,7 +11,7 @@
 #define EXTRA_WET     6
 
 // Debug info
-#define DEBUG         true
+#define DEBUG         false
 
 class Soil
 {
@@ -23,7 +23,7 @@ public:
 	};
 
 	int read() {
-    delay(50); // short delay before read analog
+    delay(10); // short delay before read analog
     int value = analogRead(sensor_pin);
 
     if(DEBUG) printf_P(PSTR("SOIL: Info: pin: %d, value: %d, "),

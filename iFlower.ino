@@ -26,7 +26,7 @@ Mesh mesh(radio);
 // Declare radio channel 0-127
 const uint8_t channel = 76;
 // Declare unique node id
-const uint16_t node_id = 00;
+const uint16_t node_id = 222;
 // Declare base id, base always has 00 id
 const uint16_t base_id = 00;
 
@@ -90,7 +90,7 @@ void setup()
 //
 void loop()
 {  
-  if( timer ) {
+  if( timer ) {    
     // read sensors
     read_DHT11();
     read_soil();
@@ -102,6 +102,9 @@ void loop()
 
   // update led
   led.update();
+  
+  // update melody
+  melody.update();
 
   // send values to base
   if( mesh.ready() && timer ) {      
@@ -229,6 +232,8 @@ void check() {
   if( states[SOIL4] != -1 && states[SOIL4] <=2 ) {
     led.set_blink(LED_RED, 4);
   }
+  
+    printf_P(PSTR("test\n\r"));
 
   melody.play(); // random melody
 }
