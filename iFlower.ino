@@ -232,8 +232,6 @@ void check() {
   if( states[SOIL4] != -1 && states[SOIL4] <=2 ) {
     led.set_blink(LED_RED, 4);
   }
-  
-    printf_P(PSTR("test\n\r"));
 
   melody.play(); // random melody
 }
