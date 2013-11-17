@@ -11,7 +11,7 @@ const int blink_delay_on = 800; 	//ms
 const int blink_delay_off = 400; 	//ms
 
 // Debug info
-#define DEBUG 		false
+#define DEBUG 		true
 
 class Led
 {

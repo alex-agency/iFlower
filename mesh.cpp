@@ -7,7 +7,7 @@
 timer_t ping_timer(30000);
 
 // Debug info
-#define DEBUG   true
+#define DEBUG   false
 
 /****************************************************************************/
 

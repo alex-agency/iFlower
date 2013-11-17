@@ -17,18 +17,18 @@
 #define DEBUG   true
 
 // Declare SPI bus pins
-#define CE_PIN  9
-#define CS_PIN  10
+//#define CE_PIN  9
+//#define CS_PIN  10
 // Set up nRF24L01 radio
-RF24 radio(CE_PIN, CS_PIN);
+//RF24 radio(CE_PIN, CS_PIN);
 // Set up network
-Mesh mesh(radio);
+//Mesh mesh(radio);
 // Declare radio channel 0-127
-const uint8_t channel = 76;
+//const uint8_t channel = 76;
 // Declare unique node id
-const uint16_t node_id = 222;
+//const uint16_t node_id = 222;
 // Declare base id, base always has 00 id
-const uint16_t base_id = 00;
+//const uint16_t base_id = 00;
 
 // Declare DHT11 sensor digital pin
 #define DHT11PIN  3
@@ -65,7 +65,7 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(10000);
+timer_t timer(60000);
 
 //
 // Setup
@@ -77,12 +77,16 @@ void setup()
   printf_begin();
 
   // initialize radio
-  radio.begin();
+  //radio.begin();
   // initialize network
-  mesh.begin(channel, node_id);
+  //mesh.begin(channel, node_id);
 
   // Shift NV-RAM address 0x08 for RTC
   RTC.setRAM(0, (uint8_t *)0x0000, sizeof(uint16_t));
+  
+  // 60*60*24*30*12* 13 +60*60*24*31* 12 +60*60*24* 17 +60*60* 22 +60* 53
+  // 404352000 +32140800 +1468800 +79200 +3180 = 438043980
+  //set_time(438043980);
 }
 
 //
@@ -107,7 +111,7 @@ void loop()
   melody.update();
 
   // send values to base
-  if( mesh.ready() && timer ) {      
+  /*if( mesh.ready() && timer ) {      
     // send DHT11 sensor values
     Payload payload1(HUMIDITY, states[HUMIDITY]);
     mesh.send(payload1, base_id);
@@ -135,13 +139,13 @@ void loop()
       Payload payload7(SOIL4, states[SOIL4]);
       mesh.send(payload7, base_id);
     }
-  }
+  }*/
   
   // update network
-  mesh.update();
+  //mesh.update();
   
   // read message if available
-  while( mesh.available() ) {
+  /*while( mesh.available() ) {
     Payload payload;
     mesh.read(payload);
     
@@ -149,7 +153,7 @@ void loop()
     if(payload.key == TIME2000) {
       set_time(payload.value);
     }
-  }
+  }*/
 }
 
 /****************************************************************************/
@@ -184,7 +188,7 @@ void read_time() {
   RTC.getTime();
   states[TIME2000] = RTC.time2000; // seconds after 2000-01-01 00:00
 
-  if(DEBUG) printf("RTC: Info: current time2000: %d -> %d-%d-%d %d:%d:%d.\n\r", 
+  if(DEBUG) printf("RTC: Info: current time2000: %u -> %d-%d-%d %d:%d:%d.\n\r", 
     states[TIME2000], RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
 }
 
@@ -196,7 +200,7 @@ void set_time(uint32_t time2000) {
   RTC.stopClock();
 
   RTC.fillByTime2000(time2000);
-  if(DEBUG) printf("RTC: Info: set new time2000: %d.\n\r", time2000);
+  if(DEBUG) printf("RTC: Info: set new time2000: %u.\n\r", time2000);
   
   RTC.setTime();
   RTC.setRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
@@ -220,20 +224,22 @@ void read_soil() {
 void check() {
   led.set_blink(LED_GREEN, 1);
 
-  if( states[SOIL1] != -1 && states[SOIL1] <=2 ) {
+  if( states[SOIL1] != -1 && states[SOIL1] <= DRY ) {
     led.set_blink(LED_RED, 1);
+    melody.play();
   }
-  if( states[SOIL2] != -1 && states[SOIL2] <=2 ) {
+  if( states[SOIL2] != -1 && states[SOIL2] <= DRY ) {
     led.set_blink(LED_RED, 2);
+    melody.play();
   }
-  if( states[SOIL3] != -1 && states[SOIL3] <=2 ) {
+  if( states[SOIL3] != -1 && states[SOIL3] <= DRY ) {
     led.set_blink(LED_RED, 3);
+    melody.play();
   }
-  if( states[SOIL4] != -1 && states[SOIL4] <=2 ) {
+  if( states[SOIL4] != -1 && states[SOIL4] <= DRY ) {
     led.set_blink(LED_RED, 4);
+    melody.play();
   }
-
-  melody.play(); // random melody
 }
 
 /****************************************************************************/
