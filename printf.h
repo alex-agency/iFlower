@@ -16,6 +16,12 @@
 #ifndef __PRINTF_H__
 #define __PRINTF_H__
 
+#if ARDUINO < 100
+#include <WProgram.h>
+#else
+#include <Arduino.h>
+#endif
+
 #ifdef ARDUINO
 
 int serial_putc( char c, FILE * ) 

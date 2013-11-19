@@ -2,6 +2,8 @@
 #ifndef SIMPLEMAP_H
 #define SIMPLEMAP_H
 
+#include <string.h>
+
 template<typename K>
 struct defcmp
 {

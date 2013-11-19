@@ -1,5 +1,5 @@
 // Import libraries
-//#include <SPI.h>
+#include <SPI.h>
 #include "printf.h"
 //#include "nRF24L01.h"
 //#include "RF24.h"
@@ -285,7 +285,7 @@ void alarm(int mode) {
   	led.set(LED_RED);	
   } else {
   	led.set_blink(LED_RED, mode);
-  	melody.beep(mode);	  	
+  	//melody.beep(mode);	  	
   }
 
 }
