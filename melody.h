@@ -8,10 +8,23 @@
 #define DEBUG 		true
 
 // declare melody count
-uint8_t const numMelodies = 2;
+uint8_t const numMelodies = 3;
+
+uint16_t beep1[] = { 850, 850, 825, 825, 850 };
+uint16_t beep1_durations[] = { 7, 7, 3, 7, 10 };
+uint16_t beep1_tempo = 50;
+
+uint16_t beep2[] = { 343, 422 };
+uint16_t beep2_durations[] = { 4, 3 };
+uint16_t beep2_tempo = 111;
+
+uint16_t beep3[] = { 500 };
+uint16_t beep3_durations[] = { 5 };
+uint16_t beep3_tempo = 100;
+
 
 // "Jingle Bells" melody	      	
-uint16_t jingleBells[] 				= { N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
+/*uint16_t jingleBells[] 				= { N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
 										N_F5, N_F5, N_F5, N_F5, N_F5, N_E5, N_E5, N_E5, N_E5, N_D5, N_D5, N_E5, N_D5, N_G5,
 										N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
 										N_F5, N_F5, N_F5, N_F5, N_F5, N_E5, N_E5, N_E5, N_G5, N_G5, N_F5, N_D5, N_C5 };
@@ -71,12 +84,15 @@ public:
 
 		switch( melodyNum ) {
 			case 1:
-				numNotes = sizeof(jingleBells)/sizeof(int);
+				numNotes = sizeof(beep1)/sizeof(int);
+				//numNotes = sizeof(jingleBells)/sizeof(int);
 			break;
 			case 2:
+				numNotes = sizeof(beep2)/sizeof(int);
 			//	numNotes = sizeof(firstNoel)/sizeof(int);
 			break;
 			case 3:
+				numNotes = sizeof(beep3)/sizeof(int);
 			//	numNotes = sizeof(whatChild)/sizeof(int);
 			break;
 		}
@@ -96,12 +112,15 @@ public:
 
 		switch( melodyNum ) {
 			case 1:
-				notePause = playNote(noteIndex, jingleBells, jingleBells_durations, jingleBells_tempo);
+				notePause = playNote(noteIndex, beep1, beep1_durations, beep1_tempo);
+			//	notePause = playNote(noteIndex, jingleBells, jingleBells_durations, jingleBells_tempo);
 			break;
 			case 2:
+				notePause = playNote(noteIndex, beep2, beep2_durations, beep2_tempo);
 			//	notePause = playNote(noteIndex, firstNoel, firstNoel_durations, firstNoel_tempo);
 			break;
 			case 3:
+				notePause = playNote(noteIndex, beep3, beep3_durations, beep3_tempo);
 			//	notePause = playNote(noteIndex, whatChild, whatChild_durations, whatChild_tempo);
 			break;
 		}

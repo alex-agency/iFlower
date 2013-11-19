@@ -1,9 +1,9 @@
 // Import libraries
-#include <SPI.h>
+//#include <SPI.h>
 #include "printf.h"
-#include "nRF24L01.h"
-#include "RF24.h"
-#include "Mesh.h"
+//#include "nRF24L01.h"
+//#include "RF24.h"
+//#include "Mesh.h"
 #include "dht11.h"
 #include "SimpleMap.h"
 #include "timer.h"
@@ -40,7 +40,7 @@
 Led led(5, 6); // (green, red) 
 
 // Declare state map keys
-#define TIME2000  "time2000"
+#define TIME2000  "time2000" // change to 2013
 
 // Set up SOIL sensors analog pins
 Soil soil_1(A0);
@@ -65,7 +65,9 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(60000);
+timer_t timer(15000);
+
+int melody_number = 0;
 
 //
 // Setup
@@ -215,8 +217,34 @@ void read_soil() {
   states[SOIL3] = soil_3.read();
   states[SOIL4] = soil_4.read();
 
-  if(DEBUG) printf("SOIL: Info: Sensor1: %d, Sensor2: %d, Sensor3: %d, Sensor4: %d.\n\r", 
-    states[SOIL1], states[SOIL2], states[SOIL3], states[SOIL4]);
+  if(DEBUG) printf("SOIL: Info: Sensor1: %s, Sensor2: %s, Sensor3: %s, Sensor4: %s.\n\r", 
+    convert_soil(states[SOIL1]), convert_soil(states[SOIL2]), 
+    convert_soil(states[SOIL3]), convert_soil(states[SOIL4]));
+}
+
+/****************************************************************************/
+
+char* convert_soil(int state) {
+	switch( state ) {
+		case EXTRA_DRY:
+			return "EXTRA DRY";
+		break;
+		case DRY:
+			return "DRY";
+		break;
+		case PARTLY_DRY:
+			return "PARTLY DRY";
+		break;
+		case PARTLY_WET:
+			return "PARTLY WET";
+		break;
+		case WET:
+			return "WET";
+		break;
+		case EXTRA_WET:
+			return "EXTRA WET";
+	}
+	return "OFF";
 }
 
 /****************************************************************************/
@@ -224,22 +252,42 @@ void read_soil() {
 void check() {
   led.set_blink(LED_GREEN, 1);
 
-  if( states[SOIL1] != -1 && states[SOIL1] <= DRY ) {
-    led.set_blink(LED_RED, 1);
-    melody.play();
+  check_soil(states[SOIL1]);
+  check_soil(states[SOIL2]);
+  check_soil(states[SOIL3]);
+  check_soil(states[SOIL4]);
+
+  if( states[TEMPERATURE] < 13 || states[TEMPERATURE] > 28 ) {
+  	alarm(0);
   }
-  if( states[SOIL2] != -1 && states[SOIL2] <= DRY ) {
-    led.set_blink(LED_RED, 2);
-    melody.play();
+
+  if( states[HUMIDITY] < 50 && states[TEMPERATURE] > 20 ) {
+  	alarm(0);
   }
-  if( states[SOIL3] != -1 && states[SOIL3] <= DRY ) {
-    led.set_blink(LED_RED, 3);
-    melody.play();
+
+  melody_number++;
+  melody.play(melody_number);
+}
+
+/****************************************************************************/
+
+void check_soil(int sensor) {
+  if( sensor != -1 && sensor <= DRY ) {
+    alarm(sensor);
   }
-  if( states[SOIL4] != -1 && states[SOIL4] <= DRY ) {
-    led.set_blink(LED_RED, 4);
-    melody.play();
+
+}
+
+/****************************************************************************/
+
+void alarm(int mode) {
+  if(mode == 0) {
+  	led.set(LED_RED);	
+  } else {
+  	led.set_blink(LED_RED, mode);
+  	melody.beep(mode);	  	
   }
+
 }
 
 /****************************************************************************/

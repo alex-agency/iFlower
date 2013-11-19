@@ -34,7 +34,7 @@ public:
 	};
 
 	void set( int _state ) {
-		set_blink(_state, 0);
+		set_blink(_state, -1);
 	};
 
 	void update( void ) {
@@ -42,13 +42,13 @@ public:
 		if( previous_state == state && blink_count == 0 ) 
 			return;
 
-		if( blink_count == 0 ) {
+		if( blink_count == -1 ) {
 			// reset time
 			time = 0;
 		}
 
 		// blinking if need
-		if( blink_count > 0 ) {
+		if( blink_count >= 0 ) {
 
 			if( time == 0 ) {
 				time = millis();
@@ -60,10 +60,22 @@ public:
 
 			unsigned long delay = millis() - time;
 
+			if( blink_count == 0 && delay > blink_delay_start ) {
+				blink_count = -1;
+				if(DEBUG) printf_P(PSTR("LED: Info: Blinking ON delay...\n\r"));
+				return;
+			}	
+
 			if( previous_state == LED_OFF && delay < blink_delay_start ) {
 				// wait 'off' delay
 				return;
 			} 
+
+			if( blink_count == 0 ) {
+				blink_count = -1;
+				if(DEBUG) printf_P(PSTR("LED: Info: Blinking ended.\n\r"));
+				return;
+			}
 
 			if( previous_state == LED_OFF && delay >= blink_delay_start ) {
 				// enable led
@@ -123,7 +135,7 @@ private:
 					digitalWrite(pin_green, LOW);
 		    		digitalWrite(pin_red, LOW);
 
-		    		if(DEBUG) printf_P(PSTR("disabled led, "));
+		    		if(DEBUG) printf_P(PSTR("led disabled, "));
 				}
 		// save previous state
 		previous_state = state;
