@@ -5,8 +5,8 @@
 #define OFF          -1
 #define EXTRA_DRY     1
 #define DRY           2
-#define PARTLY_DRY		3
-#define PARTLY_WET		4
+#define PARTLY_DRY    3
+#define PARTLY_WET    4
 #define WET           5
 #define EXTRA_WET     6
 

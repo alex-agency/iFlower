@@ -166,17 +166,17 @@ bool read_DHT11() {
       states[HUMIDITY] = DHT11.humidity;
       states[TEMPERATURE] = DHT11.temperature;
 
-      if(DEBUG) printf("DHT11: Info: Sensor values: humidity: %d, temperature: %d.\n\r", 
+      if(DEBUG) printf_P(PSTR("DHT11: Info: Sensor values: humidity: %d, temperature: %d.\n\r"), 
                   states[HUMIDITY], states[TEMPERATURE]);
       return true;
     case DHTLIB_ERROR_CHECKSUM:
-      printf("DHT11: Error: Checksum test failed!: The data may be incorrect!\n\r");
+      printf_P(PSTR("DHT11: Error: Checksum test failed!: The data may be incorrect!\n\r"));
       return false;
     case DHTLIB_ERROR_TIMEOUT: 
-      printf("DHT11: Error: Timeout occured!: Communication failed!\n\r");
+      printf_P(PSTR("DHT11: Error: Timeout occured!: Communication failed!\n\r"));
       return false;
     default: 
-      printf("DHT11: Error: Unknown error!\n\r");
+      printf_P(PSTR("DHT11: Error: Unknown error!\n\r"));
       return false;
   }
 }
@@ -189,7 +189,7 @@ void read_time() {
   states[CDN] = RTC.cdn;
   states[TIME] = RTC.hour*60*60+RTC.minute*60+RTC.second;
 
-  if(DEBUG) printf("RTC: Info: CDN: %d -> %d-%d-%d, TIME: %d -> %d:%d:%d.\n\r", 
+  if(DEBUG) printf_P(PSTR("RTC: Info: CDN: %d -> %d-%d-%d, TIME: %d -> %d:%d:%d.\n\r"), 
               states[CDN], RTC.year, RTC.month, RTC.day, 
               states[TIME], RTC.hour, RTC.minute, RTC.second);
 }
@@ -203,7 +203,7 @@ void set_time(int _cdn, int _time) {
   
   if(_cdn > 0) {
     RTC.fillByCDN(_cdn);
-    printf("RTC: Warning: set new CDN: %d.\n\r", _cdn);  	
+    printf_P(PSTR("RTC: Warning: set new CDN: %d.\n\r"), _cdn);  	
   }
 
   if(_time > 0) {
@@ -213,8 +213,8 @@ void set_time(int _cdn, int _time) {
     _time /= 60;
     uint8_t hours = _time % 24;
     RTC.fillByHMS(hours, minutes, seconds);
-    printf("RTC: Warning: set new time: %d:%d:%d.\n\r", 
-                hours, minutes, seconds );
+    printf_P(PSTR("RTC: Warning: set new time: %d:%d:%d.\n\r"), 
+      hours, minutes, seconds );
   }
 
   RTC.setTime();
@@ -230,7 +230,7 @@ void read_soil() {
   states[SOIL3] = soil_3.read();
   states[SOIL4] = soil_4.read();
 
-  if(DEBUG) printf("SOIL: Info: Soil#1: %s, Soil#2: %s, Soil#3: %s, Soil#4: %s.\n\r", 
+  if(DEBUG) printf_P(PSTR("SOIL: Info: Soil1: %s, Soil2: %s, Soil3: %s, Soil4: %s.\n\r"), 
               convert_soil(states[SOIL1]), convert_soil(states[SOIL2]), 
               convert_soil(states[SOIL3]), convert_soil(states[SOIL4]));
 }
@@ -271,22 +271,22 @@ void check() {
   check_soil(4, states[SOIL4]);
 
   if( states[TEMPERATURE] < 13 || states[TEMPERATURE] > 28 ) {
-  	alarm(0);
-  	printf("CHECK: WARNING: Temperature: %d!\n\r", states[TEMPERATURE]); 
+    alarm(0);
+    printf_P(PSTR("CHECK: WARNING: Temperature: %d!\n\r"), states[TEMPERATURE]); 
   }
 
   if( states[HUMIDITY] < 35 && states[TEMPERATURE] > 25 ) {
-  	led.set(LED_RED);
-  	printf("CHECK: WARNING: Humidity too low: %d!\n\r", states[HUMIDITY]);
+    led.set(LED_RED);
+    printf_P(PSTR("CHECK: WARNING: Humidity too low: %d!\n\r"), states[HUMIDITY]);
   }
 }
 
 /****************************************************************************/
 
 void check_soil(int sensor, int state) {
-  if( sensor != -1 && sensor <= DRY ) {
+  if( state != OFF && state <= DRY ) {
     alarm(sensor);
-    printf("CHECK: WARNING: Soil with sensor #%d need water! Its state: %d.\n\r", 
+    printf_P(PSTR("CHECK: WARNING: Soil with sensor #%d need water! Its state: %s.\n\r"), 
       sensor, convert_soil(state));
   }
 }
@@ -298,15 +298,17 @@ void alarm(int mode) {
   //melody.beep(mode);	  	
   
   // sleeping time
-  if( RTC.dow == 0 || RTC.dow == 6 || (RTC.hour < 11 && 19 > RTC.hour) ) {
+  if( RTC.dow == 0 || RTC.dow == 6 || RTC.hour < 11 || RTC.hour > 19 ) {
     return;
   }
 
+  int duration = states[TIME] - last_time_alarm;
   // do alarm each time interval
-  if( states[TIME]-last_time_alarm > alarm_interval ) {
-  	last_time_alarm = states[TIME];
-
-  	melody.play();
+  if( duration > alarm_interval ) {
+    last_time_alarm = states[TIME];
+    if(DEBUG) printf_P(PSTR("CHECK: Info: Play alarm every %d sec.\n\r"), duration);
+    
+    melody.play();
   }
 }
 
