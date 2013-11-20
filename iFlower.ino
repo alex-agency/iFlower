@@ -203,7 +203,7 @@ void set_time(int _cdn, int _time) {
   
   if(_cdn > 0) {
     RTC.fillByCDN(_cdn);
-    if(DEBUG) printf("RTC: Info: set new CDN: %d.\n\r", _cdn);  	
+    printf("RTC: Warning: set new CDN: %d.\n\r", _cdn);  	
   }
 
   if(_time > 0) {
@@ -213,7 +213,7 @@ void set_time(int _cdn, int _time) {
     _time /= 60;
     uint8_t hours = _time % 24;
     RTC.fillByHMS(hours, minutes, seconds);
-    if(DEBUG) printf("RTC: Info: set new time: %d:%d:%d.\n\r", 
+    printf("RTC: Warning: set new time: %d:%d:%d.\n\r", 
                 hours, minutes, seconds );
   }
 
@@ -230,7 +230,7 @@ void read_soil() {
   states[SOIL3] = soil_3.read();
   states[SOIL4] = soil_4.read();
 
-  if(DEBUG) printf("SOIL: Info: Soil1: %s, Soil2: %s, Soil3: %s, Soil4: %s.\n\r", 
+  if(DEBUG) printf("SOIL: Info: Soil#1: %s, Soil#2: %s, Soil#3: %s, Soil#4: %s.\n\r", 
               convert_soil(states[SOIL1]), convert_soil(states[SOIL2]), 
               convert_soil(states[SOIL3]), convert_soil(states[SOIL4]));
 }
@@ -303,7 +303,7 @@ void alarm(int mode) {
   }
 
   // do alarm each time interval
-  if( states[TIME]-last_time_alarm > alarm_interval )
+  if( states[TIME]-last_time_alarm > alarm_interval ) {
   	last_time_alarm = states[TIME];
 
   	melody.play();
