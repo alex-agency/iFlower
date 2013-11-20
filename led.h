@@ -6,12 +6,12 @@
 #define LED_RED		1
 #define LED_GREEN	2
 
-const int blink_delay_start = 3000; //ms
+const int blink_delay_start = 2500; //ms
 const int blink_delay_on = 800; 	//ms
-const int blink_delay_off = 400; 	//ms
+const int blink_delay_off = 600; 	//ms
 
 // Debug info
-#define DEBUG 		true
+#define DEBUG 		false
 
 class Led
 {
@@ -39,7 +39,7 @@ public:
 
 	void update( void ) {
 		// return if nothing update
-		if( previous_state == state && blink_count == 0 ) 
+		if( previous_state == state && blink_count == -1 ) 
 			return;
 
 		if( blink_count == -1 ) {
@@ -73,6 +73,7 @@ public:
 
 			if( blink_count == 0 ) {
 				blink_count = -1;
+                                previous_state = state;
 				if(DEBUG) printf_P(PSTR("LED: Info: Blinking ended.\n\r"));
 				return;
 			}
@@ -137,10 +138,10 @@ private:
 
 		    		if(DEBUG) printf_P(PSTR("led disabled, "));
 				}
-		// save previous state
-		previous_state = state;
 		if(DEBUG) printf_P(PSTR("new state: %d, previous state: %d.\n\r"),
 			state, previous_state);
+		// save previous state
+		previous_state = state;
 	}; 
 };
 

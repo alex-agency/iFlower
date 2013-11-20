@@ -10,9 +10,12 @@
 // declare melody count
 uint8_t const numMelodies = 3;
 
-uint16_t beep1[] = { 850, 850, 825, 825, 850 };
-uint16_t beep1_durations[] = { 7, 7, 3, 7, 10 };
-uint16_t beep1_tempo = 50;
+// R2D2
+uint16_t beep1[] = { N_A7, N_G7, N_E7, N_C7, N_D7, N_B7, N_F7, N_C8,
+                     N_A7, N_G7, N_E7, N_C7, N_D7, N_B7, N_F7, N_C8,};
+uint16_t beep1_durations[] = { 2, 2, 2, 2, 2, 2, 2, 2,
+                               2, 2, 2, 2, 2, 2, 2, 2 };
+uint16_t beep1_tempo = 40;
 
 uint16_t beep2[] = { 343, 422 };
 uint16_t beep2_durations[] = { 4, 3 };

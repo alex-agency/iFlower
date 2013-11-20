@@ -261,12 +261,12 @@ void check() {
   	alarm(0);
   }
 
-  if( states[HUMIDITY] < 50 && states[TEMPERATURE] > 20 ) {
+  if( states[HUMIDITY] < 40 && states[TEMPERATURE] > 20 ) {
   	alarm(0);
   }
 
-  melody_number++;
-  melody.play(melody_number);
+  //melody_number++;
+  //melody.play(melody_number);
 }
 
 /****************************************************************************/
