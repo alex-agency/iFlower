@@ -40,7 +40,8 @@
 Led led(5, 6); // (green, red) 
 
 // Declare state map keys
-#define TIME2000  "time2000" // change to 2013
+#define CDN  "CDN" // days after 2000-01-01
+#define TIME  "TIME" // seconds after 00:00:00
 
 // Set up SOIL sensors analog pins
 Soil soil_1(A0);
@@ -55,6 +56,9 @@ Soil soil_4(A3);
 
 // Set up Speaker digital pin
 Melody melody(4);
+// Declare interval for play melody
+const uint16_t alarm_interval = 1800; // seconds
+uint32_t last_time_alarm;
 
 // Declare state map
 struct comparator {
@@ -66,8 +70,6 @@ SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
 timer_t timer(15000);
-
-int melody_number = 0;
 
 //
 // Setup
@@ -85,10 +87,6 @@ void setup()
 
   // Shift NV-RAM address 0x08 for RTC
   RTC.setRAM(0, (uint8_t *)0x0000, sizeof(uint16_t));
-  
-  // 60*60*24*30*12* 13 +60*60*24*31* 12 +60*60*24* 17 +60*60* 22 +60* 53
-  // 404352000 +32140800 +1468800 +79200 +3180 = 438043980
-  //set_time(438043980);
 }
 
 //
@@ -188,22 +186,37 @@ bool read_DHT11() {
 void read_time() {
   RTC.getRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
   RTC.getTime();
-  states[TIME2000] = RTC.time2000; // seconds after 2000-01-01 00:00
+  states[CDN] = RTC.cdn;
+  states[TIME] = RTC.hour*60*60+RTC.minute*60+RTC.second;
 
-  if(DEBUG) printf("RTC: Info: current time2000: %u -> %d-%d-%d %d:%d:%d.\n\r", 
-    states[TIME2000], RTC.year, RTC.month, RTC.day, RTC.hour, RTC.minute, RTC.second);
+  if(DEBUG) printf("RTC: Info: CDN: %d -> %d-%d-%d, TIME: %d -> %d:%d:%d.\n\r", 
+              states[CDN], RTC.year, RTC.month, RTC.day, 
+              states[TIME], RTC.hour, RTC.minute, RTC.second);
 }
 
 /****************************************************************************/
 
-void set_time(uint32_t time2000) {
+void set_time(int _cdn, int _time) {
   RTC.setRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
   RTC.getRAM(54, (uint8_t *)0xffff, sizeof(uint16_t));
   RTC.stopClock();
-
-  RTC.fillByTime2000(time2000);
-  if(DEBUG) printf("RTC: Info: set new time2000: %u.\n\r", time2000);
   
+  if(_cdn > 0) {
+    RTC.fillByCDN(_cdn);
+    if(DEBUG) printf("RTC: Info: set new CDN: %d.\n\r", _cdn);  	
+  }
+
+  if(_time > 0) {
+    uint8_t seconds = _time % 60;
+    _time /= 60;
+    uint8_t minutes = _time % 60;
+    _time /= 60;
+    uint8_t hours = _time % 24;
+    RTC.fillByHMS(hours, minutes, seconds);
+    if(DEBUG) printf("RTC: Info: set new time: %d:%d:%d.\n\r", 
+                hours, minutes, seconds );
+  }
+
   RTC.setTime();
   RTC.setRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
   RTC.startClock();
@@ -217,9 +230,9 @@ void read_soil() {
   states[SOIL3] = soil_3.read();
   states[SOIL4] = soil_4.read();
 
-  if(DEBUG) printf("SOIL: Info: Sensor1: %s, Sensor2: %s, Sensor3: %s, Sensor4: %s.\n\r", 
-    convert_soil(states[SOIL1]), convert_soil(states[SOIL2]), 
-    convert_soil(states[SOIL3]), convert_soil(states[SOIL4]));
+  if(DEBUG) printf("SOIL: Info: Soil1: %s, Soil2: %s, Soil3: %s, Soil4: %s.\n\r", 
+              convert_soil(states[SOIL1]), convert_soil(states[SOIL2]), 
+              convert_soil(states[SOIL3]), convert_soil(states[SOIL4]));
 }
 
 /****************************************************************************/
@@ -252,42 +265,49 @@ char* convert_soil(int state) {
 void check() {
   led.set_blink(LED_GREEN, 1);
 
-  check_soil(states[SOIL1]);
-  check_soil(states[SOIL2]);
-  check_soil(states[SOIL3]);
-  check_soil(states[SOIL4]);
+  check_soil(1, states[SOIL1]);
+  check_soil(2, states[SOIL2]);
+  check_soil(3, states[SOIL3]);
+  check_soil(4, states[SOIL4]);
 
   if( states[TEMPERATURE] < 13 || states[TEMPERATURE] > 28 ) {
   	alarm(0);
+  	printf("CHECK: WARNING: Temperature: %d!\n\r", states[TEMPERATURE]); 
   }
 
-  if( states[HUMIDITY] < 40 && states[TEMPERATURE] > 20 ) {
-  	alarm(0);
+  if( states[HUMIDITY] < 35 && states[TEMPERATURE] > 25 ) {
+  	led.set(LED_RED);
+  	printf("CHECK: WARNING: Humidity too low: %d!\n\r", states[HUMIDITY]);
   }
-
-  //melody_number++;
-  //melody.play(melody_number);
 }
 
 /****************************************************************************/
 
-void check_soil(int sensor) {
+void check_soil(int sensor, int state) {
   if( sensor != -1 && sensor <= DRY ) {
     alarm(sensor);
+    printf("CHECK: WARNING: Soil with sensor #%d need water! Its state: %d.\n\r", 
+      sensor, convert_soil(state));
   }
-
 }
 
 /****************************************************************************/
 
 void alarm(int mode) {
-  if(mode == 0) {
-  	led.set(LED_RED);	
-  } else {
-  	led.set_blink(LED_RED, mode);
-  	//melody.beep(mode);	  	
+  led.set_blink(LED_RED, mode);
+  //melody.beep(mode);	  	
+  
+  // sleeping time
+  if( RTC.dow == 0 || RTC.dow == 6 || (RTC.hour < 11 && 19 > RTC.hour) ) {
+    return;
   }
 
+  // do alarm each time interval
+  if( states[TIME]-last_time_alarm > alarm_interval )
+  	last_time_alarm = states[TIME];
+
+  	melody.play();
+  }
 }
 
 /****************************************************************************/

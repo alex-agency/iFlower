@@ -29,12 +29,12 @@ public:
     if(DEBUG) printf_P(PSTR("SOIL: Info: pin: %d, value: %d, "),
       sensor_pin, value);
 
-		if( value < 200 ) {
+		if( value < 300 ) {
       if(DEBUG) printf_P(PSTR("state: EXTRA WET.\n\r"));
 				return EXTRA_WET;
     }
   		else 
-  			if( value < 350 ) {
+  			if( value < 400 ) {
         if(DEBUG) printf_P(PSTR("state: WET.\n\r"));
   				return WET;
       }
@@ -44,12 +44,12 @@ public:
           return PARTLY_WET;
         }
   				else
-  					if( value < 650 ) {
+  					if( value < 600 ) {
   						if(DEBUG) printf_P(PSTR("state: PARTLY DRY.\n\r"));
             return PARTLY_DRY;
           }
   					else
-  						if( value < 800 ) {
+  						if( value < 900 ) {
   							if(DEBUG) printf_P(PSTR("state: DRY.\n\r"));
               return DRY;
             }

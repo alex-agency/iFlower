@@ -27,7 +27,10 @@ public:
 	void set_blink( int _state, int _blink_count ) {
 		previous_state = state;
 		state = _state;
-		blink_count = _blink_count;
+		if(_blink_count < 0)
+		  	blink_count = -1;
+		else
+		    blink_count = _blink_count;
 		time = 0;
 		if(DEBUG) printf_P(PSTR("LED: Info: state: %d, blink count: %d.\n\r"),
         	_state, _blink_count);
