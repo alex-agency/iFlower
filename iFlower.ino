@@ -102,6 +102,9 @@ void loop()
 
     // check values
     check();
+    
+    // test  
+    melody.play();
   }
 
   // update led
