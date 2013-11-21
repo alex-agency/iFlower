@@ -13,9 +13,9 @@ uint8_t const numMelodies = 3;
 // R2D2
 uint16_t beep1[] = { N_A7, N_G7, N_E7, N_C7, N_D7, N_B7, N_F7, N_C8,
                      N_A7, N_G7, N_E7, N_C7, N_D7, N_B7, N_F7, N_C8,};
-uint16_t beep1_durations[] = { 2, 2, 2, 2, 2, 2, 2, 2,
+uint8_t beep1_durations[] = { 2, 2, 2, 2, 2, 2, 2, 2,
                                2, 2, 2, 2, 2, 2, 2, 2 };
-uint16_t beep1_tempo = 40;
+uint8_t beep1_tempo = 40;
 
 uint16_t beep2[] = { 343, 422 };
 uint16_t beep2_durations[] = { 4, 3 };
@@ -25,9 +25,8 @@ uint16_t beep3[] = { 500 };
 uint16_t beep3_durations[] = { 5 };
 uint16_t beep3_tempo = 100;
 
-
 // "Jingle Bells" melody	      	
-/*uint16_t jingleBells[] 				= { N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
+/*uint16_t jingleBells[] 			= { N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
 										N_F5, N_F5, N_F5, N_F5, N_F5, N_E5, N_E5, N_E5, N_E5, N_D5, N_D5, N_E5, N_D5, N_G5,
 										N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, N_C5, N_D5, N_E5,
 										N_F5, N_F5, N_F5, N_F5, N_F5, N_E5, N_E5, N_E5, N_G5, N_G5, N_F5, N_D5, N_C5 };
@@ -35,7 +34,7 @@ uint16_t jingleBells_durations[] 	= { 4, 4, 8, 4, 4, 8, 4, 4, 4, 4, 16,
 										4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8,
 										4, 4, 8, 4, 4, 8, 4, 4, 4, 4, 16,
 										4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 16 };
-uint16_t jingleBells_tempo 			=	60;	
+uint16_t jingleBells_tempo 			=	60;
 
 // "The first noel" melody
 /*uint16_t firstNoel[] 				= { N_E4, N_D4, N_C4, N_D4, N_E4, N_F4, N_G4, N_A4, N_B4, N_C5, N_B4, N_A4,
@@ -72,7 +71,19 @@ public:
     	pinMode(pin, OUTPUT);
 	};
 
+	void beep( uint8_t _beepCount ) {
+		if( _beepCount < 0 )
+			return;
+		// set beep count
+		beepCount = _beepCount;
+		// reset index
+		noteIndex = 0;
+		notePause = 0;
+		time = 0;
+	};
+
 	void play( void ) {
+		// play random
 		play(0);
 	};
 
@@ -81,7 +92,7 @@ public:
 			return;
 
 		if(_melodyNum < 0 || _melodyNum == 0 || _melodyNum > numMelodies)
-			melodyNum = random(1, numMelodies);
+			melodyNum = random(2, numMelodies);
 		else
 			melodyNum = _melodyNum;
 
@@ -109,13 +120,18 @@ public:
 	};
 
 	void update( void ) {
-		
+		if( beepCount > 0 && noteIndex == 0 ) {
+			// play beep melody
+			play(1);
+			beepCount--;
+		}
+
 		if( noteIndex >= numNotes || (millis() - time) < notePause )
 			return;
 
 		switch( melodyNum ) {
 			case 1:
-				notePause = playNote(noteIndex, beep1, beep1_durations, beep1_tempo);
+			//	notePause = playNote(noteIndex, beep1, beep1_durations, beep1_tempo);
 			//	notePause = playNote(noteIndex, jingleBells, jingleBells_durations, jingleBells_tempo);
 			break;
 			case 2:
@@ -134,11 +150,39 @@ public:
 
 private:
 	uint8_t pin;
-	uint8_t melodyNum;	
+	uint8_t beepCount;
+	uint8_t melodyNum;
+	uint16_t *melody;
+	uint8_t *duration;	
     uint16_t numNotes;
 	uint16_t noteIndex;
 	uint16_t notePause;
 	unsigned long time;
+
+	void compileMelody() {
+		switch( melodyNum ) {
+			case 1:
+				uint16_t jingleBells[]  	= { N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_G5, 
+												N_C5, N_D5, N_E5, N_F5, N_F5, N_F5, N_F5, N_F5, 
+												N_E5, N_E5, N_E5, N_E5, N_D5, N_D5, N_E5, N_D5, 
+												N_G5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, N_E5, 
+												N_G5, N_C5, N_D5, N_E5, N_F5, N_F5, N_F5, N_F5, 
+												N_F5, N_E5, N_E5, N_E5, N_G5, N_G5, N_F5, N_D5, 
+												N_C5 };
+				melody = jingleBells;
+
+				uint8_t jingleBells_dur[] 	= { 4, 	  4,    8,    4,    4,    8,    4,    4, 
+												4,    4,   16,    4,    4,    4,    4,    4, 
+												4,    4,    4,    4,    4,    4,    4,    8, 
+												8,    4,    4,    8,    4,    4,    8,    4, 
+												4,    4,    4,   16,    4,    4,    4,    4, 
+												4,    4,    4,    4,    4,    4,    4,    4, 
+												16 };
+				duration = jingleBells_dur;
+			break;
+		}
+
+	};
 
 	uint16_t playNote( uint16_t _noteIndex, uint16_t* _melody, uint16_t* _durations, uint16_t _tempo ) {
 		noTone(pin);
@@ -149,7 +193,6 @@ private:
 		if (freq > 0) {
 			tone(pin, freq, noteDuration); 
 		}
-
 		// to distinguish the notes, set a minimum time between them.
 		// the note's duration + 30% seems to work well:
 		return noteDuration + (noteDuration * 0.30);

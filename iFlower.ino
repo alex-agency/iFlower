@@ -295,7 +295,7 @@ void check_soil(int sensor, int state) {
 
 void alarm(int mode) {
   led.set_blink(LED_RED, mode);
-  //melody.beep(mode);	  	
+  melody.beep(mode);	  	
   
   // sleeping time
   if( RTC.dow == 0 || RTC.dow == 6 || RTC.hour < 11 || RTC.hour > 19 ) {
