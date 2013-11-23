@@ -12,23 +12,24 @@
 #include "led.h"
 #include "soil.h"
 #include "melody.h"
+#include "sleep.h"
 
 // Debug info
-#define DEBUG   false
+#define DEBUG   true
 
 // Declare SPI bus pins
-//#define CE_PIN  9
-//#define CS_PIN  10
+#define CE_PIN  9
+#define CS_PIN  10
 // Set up nRF24L01 radio
 //RF24 radio(CE_PIN, CS_PIN);
 // Set up network
 //Mesh mesh(radio);
 // Declare radio channel 0-127
-//const uint8_t channel = 76;
+const uint8_t channel = 76;
 // Declare unique node id
-//const uint16_t node_id = 222;
+const uint16_t node_id = 222;
 // Declare base id, base always has 00 id
-//const uint16_t base_id = 00;
+const uint16_t base_id = 00;
 
 // Declare DHT11 sensor digital pin
 #define DHT11PIN  3
@@ -69,7 +70,14 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(180000);
+timer_t timer(10000);
+
+// Sleep constants.  In this example, the watchdog timer wakes up
+// every 4s, and every single wakeup we power up the radio and send
+// a reading.  In real use, these numbers which be much higher.
+// Try wdt_8s and 7 cycles for one reading per minute.> 1
+const wdt_prescalar_e wdt_prescalar = wdt_8s;
+const int sleep_cycles_per_transmission = 22;
 
 //
 // Setup
@@ -90,6 +98,13 @@ void setup()
   
   // Device welcome melody
   melody.play(5); // R2D2
+
+  // Configure sleep
+  Sleep.begin(wdt_prescalar,sleep_cycles_per_transmission);
+  
+  // Set Clock
+  // 365*13+30*11+23=4745+330+23=5098
+  //set_time(5075, 1407);
 }
 
 //
@@ -97,7 +112,23 @@ void setup()
 //
 void loop()
 {  
-  if( timer ) {    
+  if( timer ) { 
+    // sleeping
+    if (Sleep) {
+      if(DEBUG) printf("SLEEP: Info: Go to Sleep.\n\r");
+      // Power down the radio.  Note that the radio will get powered back up
+      // on the next write() call.
+      //radio.powerDown();
+      // Be sure to flush the serial first before sleeping, so everything
+      // gets printed properly
+      Serial.flush();
+      // Sleep the MCU.  The watchdog timer will awaken in a short while, and
+      // continue execution here.
+      Sleep.go();
+      //radio.powerUp();
+      if(DEBUG) printf("SLEEP: Info: WakeUp\n\r");
+    }
+
     // read sensors
     read_DHT11();
     read_soil();
@@ -107,12 +138,11 @@ void loop()
     check();
   }
   
-  // update melody
-  melody.update();
-
   // update led
   led.update();
-
+  
+  // update melody
+  melody.update();
 
   // send values to base
   /*if( mesh.ready() && timer ) {      
@@ -123,7 +153,7 @@ void loop()
     mesh.send(payload2, base_id);
 
     // send time value
-    Payload payload3(TIME2000, states[TIME2000]);
+    Payload payload3(TIME, states[TIME]);
     mesh.send(payload3, base_id);
 
     // send Soil sensors values
@@ -143,19 +173,19 @@ void loop()
       Payload payload7(SOIL4, states[SOIL4]);
       mesh.send(payload7, base_id);
     }
-  }*/
+  }
   
   // update network
-  //mesh.update();
+  mesh.update();
   
   // read message if available
-  /*while( mesh.available() ) {
+  while( mesh.available() ) {
     Payload payload;
     mesh.read(payload);
     
     // set new time
-    if(payload.key == TIME2000) {
-      set_time(payload.value);
+    if(payload.key == TIME) {
+      set_time(0,payload.value);
     }
   }*/
 }
