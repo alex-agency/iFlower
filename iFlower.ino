@@ -14,7 +14,7 @@
 #include "melody.h"
 
 // Debug info
-#define DEBUG   true
+#define DEBUG   false
 
 // Declare SPI bus pins
 //#define CE_PIN  9
@@ -57,7 +57,7 @@ Soil soil_4(A3);
 // Set up Speaker digital pin
 Melody melody(4);
 // Declare interval for play melody
-const uint16_t alarm_interval = 18000; // seconds
+const uint16_t alarm_interval = 3600; // seconds
 uint32_t last_time_alarm;
 
 // Declare state map
@@ -69,7 +69,7 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(60000);
+timer_t timer(180000);
 
 //
 // Setup
@@ -87,6 +87,9 @@ void setup()
 
   // Shift NV-RAM address 0x08 for RTC
   RTC.setRAM(0, (uint8_t *)0x0000, sizeof(uint16_t));
+  
+  // Device welcome melody
+  melody.play(5); // R2D2
 }
 
 //
