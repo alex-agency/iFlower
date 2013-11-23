@@ -6,7 +6,7 @@
 #define LED_RED		1
 #define LED_GREEN	2
 
-const int blink_delay_start = 2500; //ms
+const int blink_delay_start = 3000; //ms
 const int blink_delay_on = 800; 	//ms
 const int blink_delay_off = 600; 	//ms
 

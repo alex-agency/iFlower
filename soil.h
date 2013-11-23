@@ -11,7 +11,7 @@
 #define EXTRA_WET     6
 
 // Debug info
-#define DEBUG         false
+#define DEBUG         true
 
 class Soil
 {

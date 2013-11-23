@@ -41,7 +41,7 @@ Led led(5, 6); // (green, red)
 
 // Declare state map keys
 #define CDN  "CDN" // days after 2000-01-01
-#define TIME  "TIME" // seconds after 00:00:00
+#define TIME  "TIME" // minutes after 00:00
 
 // Set up SOIL sensors analog pins
 Soil soil_1(A0);
@@ -57,7 +57,7 @@ Soil soil_4(A3);
 // Set up Speaker digital pin
 Melody melody(4);
 // Declare interval for play melody
-const uint16_t alarm_interval = 1800; // seconds
+const uint16_t alarm_interval = 18000; // seconds
 uint32_t last_time_alarm;
 
 // Declare state map
@@ -69,7 +69,7 @@ struct comparator {
 SimpleMap<const char*, int, 9, comparator> states;
 
 // Declare delay manager in ms
-timer_t timer(15000);
+timer_t timer(60000);
 
 //
 // Setup
@@ -102,16 +102,14 @@ void loop()
 
     // check values
     check();
-    
-    // test  
-    melody.play();
   }
-
-  // update led
-  led.update();
   
   // update melody
   melody.update();
+
+  // update led
+  led.update();
+
 
   // send values to base
   /*if( mesh.ready() && timer ) {      
@@ -190,7 +188,7 @@ void read_time() {
   RTC.getRAM(54, (uint8_t *)0xaa55, sizeof(uint16_t));
   RTC.getTime();
   states[CDN] = RTC.cdn;
-  states[TIME] = RTC.hour*60*60+RTC.minute*60+RTC.second;
+  states[TIME] = RTC.hour*60+RTC.minute;
 
   if(DEBUG) printf_P(PSTR("RTC: Info: CDN: %d -> %d-%d-%d, TIME: %d -> %d:%d:%d.\n\r"), 
               states[CDN], RTC.year, RTC.month, RTC.day, 
@@ -210,14 +208,12 @@ void set_time(int _cdn, int _time) {
   }
 
   if(_time > 0) {
-    uint8_t seconds = _time % 60;
-    _time /= 60;
     uint8_t minutes = _time % 60;
     _time /= 60;
     uint8_t hours = _time % 24;
-    RTC.fillByHMS(hours, minutes, seconds);
-    printf_P(PSTR("RTC: Warning: set new time: %d:%d:%d.\n\r"), 
-      hours, minutes, seconds );
+    RTC.fillByHMS(hours, minutes, 00);
+    printf_P(PSTR("RTC: Warning: set new time: %d:%d:00.\n\r"), 
+      hours, minutes);
   }
 
   RTC.setTime();
@@ -287,7 +283,7 @@ void check() {
 /****************************************************************************/
 
 void check_soil(int sensor, int state) {
-  if( state != OFF && state <= DRY ) {
+  if( state != OFF && state <= 2 ) {
     alarm(sensor);
     printf_P(PSTR("CHECK: WARNING: Soil with sensor #%d need water! Its state: %s.\n\r"), 
       sensor, convert_soil(state));
