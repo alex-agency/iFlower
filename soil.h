@@ -18,11 +18,11 @@ class Soil
 public:
 	Soil( int _sensor_pin ) {
 		sensor_pin = _sensor_pin;
-		// initialize
-		pinMode(sensor_pin, INPUT_PULLUP);
 	};
 
 	int read() {
+    // initialize
+    pinMode(sensor_pin, INPUT_PULLUP);
     delay(10); // short delay before read analog
     int value = analogRead(sensor_pin);
 

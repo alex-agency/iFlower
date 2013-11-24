@@ -19,12 +19,13 @@ public:
 	Led( int _pin_green, int _pin_red ) {
 		pin_green = _pin_green;
 		pin_red = _pin_red;
-		// initialize led pins
-    	pinMode(_pin_green, OUTPUT);
-    	pinMode(_pin_red, OUTPUT);
 	};
 
 	void set_blink( int _state, int _blink_count ) {
+		// initialize led pins
+    	pinMode(pin_green, OUTPUT);
+    	pinMode(pin_red, OUTPUT);
+
 		previous_state = state;
 		state = _state;
 		if(_blink_count < 0)

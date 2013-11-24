@@ -106,6 +106,11 @@ void loop()
     // sleeping
     if(DEBUG) printf("SLEEP: Info: Go to Sleep...\n\r");
     Serial.flush();
+    // set all pin to low with pullup.
+    for(int i=1; i<=21; i++) {
+      pinMode(i, INPUT_PULLUP);
+      digitalWrite(i, LOW);
+    }
     // Enter power down state for 8*22 sec with ADC and BOD module disabled
     LowPower.powerDown(SLEEP_8S, 22, ADC_OFF, BOD_OFF); 
     if(DEBUG) printf("SLEEP: Info: WakeUp.\n\r");

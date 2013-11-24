@@ -16,8 +16,6 @@ class Melody
 public:
   Melody( uint8_t _pin ) {
     pin = _pin;
-    // initialize speaker pin
-    pinMode(pin, OUTPUT);
   };
 
   void beep( uint8_t _beepCount ) {
@@ -35,6 +33,8 @@ public:
   };
 
   void play( uint8_t _melodyNum ) {
+  	// initialize speaker pin
+    pinMode(pin, OUTPUT);
     // prevent new play if previous not ended
     if( noteIndex < numNotes ) 
 	  return;
